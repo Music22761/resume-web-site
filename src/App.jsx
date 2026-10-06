@@ -1,29 +1,28 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import Icon from './Icon.jsx'
-import {
-  education,
-  experience,
-  profile,
-  projects,
-  skills,
-  softSkills,
-  stats,
-} from './data.js'
+import { contact, content } from './data.js'
 import './App.css'
 
 const year = new Date().getFullYear()
 
-const navLinks = [
-  ['about', 'About'],
-  ['experience', 'Experience'],
-  ['projects', 'Projects'],
-  ['skills', 'Skills'],
-  ['contact', 'Contact'],
-]
+const sectionIds = ['about', 'experience', 'projects', 'skills', 'contact']
 
-function useReveal() {
+const LangContext = createContext({ lang: 'en', t: content.en, setLang: () => {} })
+const useLang = () => useContext(LangContext)
+
+function initialLang() {
+  try {
+    const saved = localStorage.getItem('lang')
+    if (saved === 'th' || saved === 'en') return saved
+  } catch {
+    // storage unavailable — fall back to the browser language
+  }
+  return navigator.language?.toLowerCase().startsWith('th') ? 'th' : 'en'
+}
+
+function useReveal(lang) {
   useEffect(() => {
-    const els = document.querySelectorAll('.reveal')
+    const els = document.querySelectorAll('.reveal:not(.is-visible)')
     if (!('IntersectionObserver' in window)) {
       els.forEach((el) => el.classList.add('is-visible'))
       return
@@ -41,7 +40,7 @@ function useReveal() {
     )
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
-  }, [])
+  }, [lang])
 }
 
 function useActiveSection() {
@@ -53,7 +52,7 @@ function useActiveSection() {
       },
       { rootMargin: '-45% 0px -50% 0px' },
     )
-    navLinks.forEach(([id]) => {
+    sectionIds.forEach((id) => {
       const el = document.getElementById(id)
       if (el) io.observe(el)
     })
@@ -63,6 +62,7 @@ function useActiveSection() {
 }
 
 function ThemeToggle() {
+  const { t } = useLang()
   const [theme, setTheme] = useState(() => {
     const set = document.documentElement.dataset.theme
     if (set) return set
@@ -85,14 +85,31 @@ function ThemeToggle() {
       type="button"
       className="icon-btn"
       onClick={toggle}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      aria-label={theme === 'dark' ? t.ui.toLight : t.ui.toDark}
     >
       <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
     </button>
   )
 }
 
+function LangToggle() {
+  const { lang, setLang, t } = useLang()
+  return (
+    <button
+      type="button"
+      className="lang-toggle"
+      onClick={() => setLang(lang === 'en' ? 'th' : 'en')}
+      aria-label={t.ui.switchLang}
+      title={t.ui.switchLang}
+    >
+      <span className={lang === 'th' ? 'is-active' : ''}>TH</span>
+      <span className={lang === 'en' ? 'is-active' : ''}>EN</span>
+    </button>
+  )
+}
+
 function Nav() {
+  const { t } = useLang()
   const active = useActiveSection()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -109,27 +126,28 @@ function Nav() {
       <div className="container nav__inner">
         <a href="#top" className="nav__logo" onClick={() => setOpen(false)}>
           <span className="nav__mark">SC</span>
-          <span className="nav__name">{profile.firstName}</span>
+          <span className="nav__name">{contact.firstName}</span>
         </a>
         <nav className={`nav__links ${open ? 'is-open' : ''}`}>
-          {navLinks.map(([id, label]) => (
+          {sectionIds.map((id) => (
             <a
               key={id}
               href={`#${id}`}
               className={active === id ? 'is-active' : ''}
               onClick={() => setOpen(false)}
             >
-              {label}
+              {t.nav[id]}
             </a>
           ))}
         </nav>
         <div className="nav__actions">
+          <LangToggle />
           <ThemeToggle />
           <button
             type="button"
             className="icon-btn nav__menu"
             onClick={() => setOpen((o) => !o)}
-            aria-label="Toggle menu"
+            aria-label={t.ui.toggleMenu}
             aria-expanded={open}
           >
             <Icon name={open ? 'close' : 'menu'} size={18} />
@@ -141,30 +159,33 @@ function Nav() {
 }
 
 function Hero() {
+  const { t } = useLang()
   return (
     <section className="hero" id="top">
       <div className="hero__glow" aria-hidden="true" />
       <div className="container hero__grid">
         <div className="hero__text">
           <p className="status reveal">
-            <span className="status__dot" /> Software Developer @ Kitsomboon
+            <span className="status__dot" /> {t.ui.status}
           </p>
           <h1 className="hero__title reveal">
-            Hi, I&apos;m <span className="gradient-text">{profile.firstName}</span>.
-            <br />I build systems end to end.
+            {t.ui.hello} <span className="gradient-text">{contact.firstName}</span>
+            {t.ui.nameEnd}
+            <br />
+            {t.ui.headline}
           </h1>
-          <p className="hero__lead reveal">{profile.tagline}</p>
+          <p className="hero__lead reveal">{t.tagline}</p>
           <div className="hero__cta reveal">
             <a href="#projects" className="btn btn--primary">
-              View my work <Icon name="arrow" size={18} />
+              {t.ui.viewWork} <Icon name="arrow" size={18} />
             </a>
-            <a href={profile.resume} className="btn btn--ghost" download>
-              <Icon name="download" size={18} /> Download résumé
+            <a href={contact.resume} className="btn btn--ghost" download>
+              <Icon name="download" size={18} /> {t.ui.download}
             </a>
           </div>
           <dl className="stats reveal">
-            {stats.map((s) => (
-              <div key={s.label} className="stats__item">
+            {t.stats.map((s, i) => (
+              <div key={i} className="stats__item">
                 <dt>{s.label}</dt>
                 <dd>{s.value}</dd>
               </div>
@@ -174,8 +195,8 @@ function Hero() {
 
         <div className="hero__visual reveal">
           <div className="portrait">
-            {profile.photo ? (
-              <img src={profile.photo} alt={`Portrait of ${profile.name}`} />
+            {contact.photo ? (
+              <img src={contact.photo} alt={`${t.ui.portraitAlt} ${contact.name}`} />
             ) : (
               <div className="portrait__empty" aria-hidden="true">
                 <Icon name="user" size={72} />
@@ -190,7 +211,7 @@ function Hero() {
             <pre>
               <code>
                 <i className="k">const</i> <i className="v">dev</i> = {'{'}
-                {'\n'}  name: <i className="s">&apos;{profile.name}&apos;</i>,
+                {'\n'}  name: <i className="s">&apos;{contact.name}&apos;</i>,
                 {'\n'}  stack: [<i className="s">&apos;Web&apos;</i>, <i className="s">&apos;Mobile&apos;</i>, <i className="s">&apos;API&apos;</i>],
                 {'\n'}  runtime: <i className="s">&apos;Bun&apos;</i>,
                 {'\n'}  ships: <i className="k">true</i>,
@@ -215,27 +236,28 @@ function SectionHead({ index, eyebrow, title }) {
 }
 
 function About() {
+  const { t } = useLang()
   return (
     <section className="section" id="about">
       <div className="container">
-        <SectionHead index="01" eyebrow="About me" title="From requirements to production." />
+        <SectionHead index="01" eyebrow={t.ui.aboutEyebrow} title={t.ui.aboutTitle} />
         <div className="about">
-          <p className="about__text reveal">{profile.about}</p>
+          <p className="about__text reveal">{t.about}</p>
           <div className="about__cards">
             <div className="info-card reveal">
               <span className="info-card__icon"><Icon name="cap" /></span>
               <div>
-                <p className="info-card__label">Education</p>
-                <p className="info-card__title">{education.degree}</p>
-                <p className="info-card__sub">{education.school}, {education.location}</p>
+                <p className="info-card__label">{t.ui.education}</p>
+                <p className="info-card__title">{t.education.degree}</p>
+                <p className="info-card__sub">{t.education.school}</p>
               </div>
             </div>
             <div className="info-card reveal">
               <span className="info-card__icon"><Icon name="pin" /></span>
               <div>
-                <p className="info-card__label">Based in</p>
-                <p className="info-card__title">{profile.location}</p>
-                <p className="info-card__sub">Open to new opportunities</p>
+                <p className="info-card__label">{t.ui.basedIn}</p>
+                <p className="info-card__title">{t.ui.location}</p>
+                <p className="info-card__sub">{t.ui.openTo}</p>
               </div>
             </div>
           </div>
@@ -246,10 +268,12 @@ function About() {
 }
 
 function Experience() {
+  const { t } = useLang()
+  const { experience } = t
   return (
     <section className="section" id="experience">
       <div className="container">
-        <SectionHead index="02" eyebrow="Experience" title="Where I work." />
+        <SectionHead index="02" eyebrow={t.ui.expEyebrow} title={t.ui.expTitle} />
         <article className="job reveal">
           <header className="job__head">
             <div>
@@ -262,7 +286,7 @@ function Experience() {
           </header>
           <ul className="job__grid">
             {experience.responsibilities.map((r) => (
-              <li key={r.title} className="duty">
+              <li key={r.icon} className="duty">
                 <span className="duty__icon"><Icon name={r.icon} /></span>
                 <h4>{r.title}</h4>
                 <p>{r.text}</p>
@@ -276,26 +300,27 @@ function Experience() {
 }
 
 function Projects() {
+  const { t } = useLang()
   return (
     <section className="section" id="projects">
       <div className="container">
-        <SectionHead index="03" eyebrow="Selected projects" title="Things I've built." />
+        <SectionHead index="03" eyebrow={t.ui.projEyebrow} title={t.ui.projTitle} />
         <div className="projects">
-          {projects.map((p, i) => (
-            <article key={p.title} className="project reveal" style={{ '--d': `${i * 80}ms` }}>
+          {t.projects.map((p, i) => (
+            <article key={p.id} className="project reveal" style={{ '--d': `${i * 80}ms` }}>
               <div className="project__top">
                 <span className="project__num">{String(i + 1).padStart(2, '0')}</span>
                 <div className="project__tags">
                   {p.badge && <span className="pill pill--accent">{p.badge}</span>}
-                  {p.tags.map((t) => (
-                    <span key={t} className="pill">{t}</span>
+                  {p.tags.map((tag) => (
+                    <span key={tag} className="pill">{tag}</span>
                   ))}
                 </div>
               </div>
               <h3>{p.title}</h3>
               <p className="project__summary">{p.summary}</p>
               <div className="project__role">
-                <span>Role</span>
+                <span>{t.ui.role}</span>
                 <p>{p.role}</p>
               </div>
               <ul className="project__stack">
@@ -312,13 +337,14 @@ function Projects() {
 }
 
 function Skills() {
+  const { t } = useLang()
   return (
     <section className="section" id="skills">
       <div className="container">
-        <SectionHead index="04" eyebrow="Skills" title="My toolkit." />
+        <SectionHead index="04" eyebrow={t.ui.skillsEyebrow} title={t.ui.skillsTitle} />
         <div className="skills">
-          {skills.map((s, i) => (
-            <div key={s.group} className="skill-card reveal" style={{ '--d': `${i * 60}ms` }}>
+          {t.skills.map((s, i) => (
+            <div key={s.icon} className="skill-card reveal" style={{ '--d': `${i * 60}ms` }}>
               <div className="skill-card__head">
                 <span className="duty__icon"><Icon name={s.icon} /></span>
                 <h3>{s.group}</h3>
@@ -333,11 +359,11 @@ function Skills() {
           <div className="skill-card skill-card--wide reveal">
             <div className="skill-card__head">
               <span className="duty__icon"><Icon name="users" /></span>
-              <h3>Beyond code</h3>
+              <h3>{t.ui.beyondCode}</h3>
             </div>
             <ul className="soft">
-              {softSkills.map((s) => (
-                <li key={s}>
+              {t.softSkills.map((s, i) => (
+                <li key={i}>
                   <Icon name="check" size={16} /> {s}
                 </li>
               ))}
@@ -350,6 +376,7 @@ function Skills() {
 }
 
 function CopyButton({ value }) {
+  const { t } = useLang()
   const [copied, setCopied] = useState(false)
   const copy = async () => {
     try {
@@ -361,50 +388,49 @@ function CopyButton({ value }) {
     }
   }
   return (
-    <button type="button" className="icon-btn icon-btn--sm" onClick={copy} aria-label={`Copy ${value}`}>
+    <button type="button" className="icon-btn icon-btn--sm" onClick={copy} aria-label={`${t.ui.copy} ${value}`}>
       <Icon name={copied ? 'check' : 'copy'} size={16} />
     </button>
   )
 }
 
 function Contact() {
+  const { t } = useLang()
   return (
     <section className="section contact" id="contact">
       <div className="container">
         <div className="contact__card reveal">
-          <p className="eyebrow">05 — Contact</p>
+          <p className="eyebrow">{t.ui.contactEyebrow}</p>
           <h2>
-            Have a project in mind?
+            {t.ui.contactTitle}
             <br />
-            <span className="gradient-text">Let&apos;s build it together.</span>
+            <span className="gradient-text">{t.ui.contactTitle2}</span>
           </h2>
-          <p className="contact__lead">
-            I&apos;m always happy to talk about new opportunities, interesting systems, or how I can help your team ship.
-          </p>
+          <p className="contact__lead">{t.ui.contactLead}</p>
           <div className="contact__links">
             <div className="contact__item">
-              <a href={`mailto:${profile.email}`}>
+              <a href={`mailto:${contact.email}`}>
                 <span className="duty__icon"><Icon name="mail" /></span>
                 <span>
-                  <small>Email</small>
-                  {profile.email}
+                  <small>{t.ui.email}</small>
+                  {contact.email}
                 </span>
               </a>
-              <CopyButton value={profile.email} />
+              <CopyButton value={contact.email} />
             </div>
             <div className="contact__item">
-              <a href={`tel:${profile.phoneHref}`}>
+              <a href={`tel:${contact.phoneHref}`}>
                 <span className="duty__icon"><Icon name="phone" /></span>
                 <span>
-                  <small>Phone</small>
-                  {profile.phone}
+                  <small>{t.ui.phone}</small>
+                  {contact.phone}
                 </span>
               </a>
-              <CopyButton value={profile.phone} />
+              <CopyButton value={contact.phone} />
             </div>
           </div>
-          <a href={`mailto:${profile.email}`} className="btn btn--primary btn--lg">
-            Say hello <Icon name="arrow" size={18} />
+          <a href={`mailto:${contact.email}`} className="btn btn--primary btn--lg">
+            {t.ui.sayHello} <Icon name="arrow" size={18} />
           </a>
         </div>
       </div>
@@ -413,9 +439,28 @@ function Contact() {
 }
 
 function App() {
-  useReveal()
+  const [lang, setLangState] = useState(initialLang)
+  const t = content[lang]
+
+  const setLang = (next) => {
+    setLangState(next)
+    try {
+      localStorage.setItem('lang', next)
+    } catch {
+      // storage unavailable — language still applies for this visit
+    }
+  }
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.title = t.meta.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t.meta.description)
+  }, [lang, t])
+
+  useReveal(lang)
+
   return (
-    <>
+    <LangContext.Provider value={{ lang, t, setLang }}>
       <Nav />
       <main>
         <Hero />
@@ -427,11 +472,11 @@ function App() {
       </main>
       <footer className="footer">
         <div className="container footer__inner">
-          <p>© {year} {profile.name}</p>
-          <a href="#top">Back to top ↑</a>
+          <p>© {year} {contact.name}</p>
+          <a href="#top">{t.ui.backToTop}</a>
         </div>
       </footer>
-    </>
+    </LangContext.Provider>
   )
 }
 

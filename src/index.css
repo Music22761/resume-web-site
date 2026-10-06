@@ -16,9 +16,9 @@
   --shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.6);
   --grid-line: rgba(255, 255, 255, 0.035);
 
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Space Grotesk', var(--font-sans);
-  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --font-sans: 'Inter', 'IBM Plex Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', 'IBM Plex Sans Thai', var(--font-sans);
+  --font-mono: 'JetBrains Mono', 'IBM Plex Sans Thai', ui-monospace, Consolas, monospace;
   --radius: 20px;
 
   color-scheme: dark;
@@ -104,6 +104,18 @@ h4 {
 
 p {
   margin: 0;
+}
+
+/* Thai has tall stacked vowels/tone marks and no tracking convention */
+:lang(th) h1,
+:lang(th) h2,
+:lang(th) h3,
+:lang(th) h4 {
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+:lang(th) body {
+  line-height: 1.75;
 }
 
 a {

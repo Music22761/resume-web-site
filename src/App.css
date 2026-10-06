@@ -204,6 +204,38 @@
 .nav__menu {
   display: none;
 }
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 4px;
+  gap: 2px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.lang-toggle:hover {
+  border-color: var(--border-strong);
+}
+.lang-toggle span {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 30px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.lang-toggle span.is-active {
+  background: var(--grad);
+  color: #fff;
+}
 
 /* ---------- Hero ---------- */
 .hero {
@@ -279,6 +311,16 @@
   line-height: 1.04;
   letter-spacing: -0.035em;
   --d: 60ms;
+}
+:lang(th) .hero__title {
+  line-height: 1.25;
+  font-size: clamp(36px, 5.4vw, 60px);
+}
+:lang(th) .eyebrow,
+:lang(th) .info-card__label,
+:lang(th) .project__role span,
+:lang(th) .contact__item small {
+  letter-spacing: 0.02em;
 }
 .hero__lead {
   margin-top: 24px;
@@ -901,7 +943,17 @@
     padding-top: 120px;
     min-height: auto;
   }
-  .hero__lead {
+  :lang(th) .hero__title {
+  line-height: 1.25;
+  font-size: clamp(36px, 5.4vw, 60px);
+}
+:lang(th) .eyebrow,
+:lang(th) .info-card__label,
+:lang(th) .project__role span,
+:lang(th) .contact__item small {
+  letter-spacing: 0.02em;
+}
+.hero__lead {
     font-size: 16.5px;
   }
   .stats dd {
