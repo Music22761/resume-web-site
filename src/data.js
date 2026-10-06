@@ -11,6 +11,8 @@ export const profile = {
   phoneHref: '+66634910819',
   location: 'Thailand',
   resume: '/Sitthikan-Chaiyamart-Resume.pdf',
+  // Set to an imported image (e.g. `import photo from './assets/profile.png'`) to show a photo
+  photo: null,
 }
 
 export const stats = [

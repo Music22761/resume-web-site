@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import profileImg from './assets/profile.png'
 import Icon from './Icon.jsx'
 import {
   education,
@@ -175,7 +174,13 @@ function Hero() {
 
         <div className="hero__visual reveal">
           <div className="portrait">
-            <img src={profileImg} alt={`Portrait of ${profile.name}`} />
+            {profile.photo ? (
+              <img src={profile.photo} alt={`Portrait of ${profile.name}`} />
+            ) : (
+              <div className="portrait__empty" aria-hidden="true">
+                <Icon name="user" size={72} />
+              </div>
+            )}
           </div>
           <div className="code-card" aria-hidden="true">
             <div className="code-card__bar">
